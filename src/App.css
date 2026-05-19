@@ -1,0 +1,858 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #1a472a;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* ─── Lobby ─── */
+.lobby {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  text-align: center;
+}
+
+.lobby-title {
+  font-size: 3rem;
+  color: #ffd700;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+  margin-bottom: 6px;
+}
+
+.lobby-subtitle {
+  color: #aaa;
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+.lobby-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.avatar-card {
+  background: rgba(0,0,0,0.3);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 12px 8px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s, background 0.2s;
+  position: relative;
+}
+
+.avatar-card:hover:not(.disabled) {
+  border-color: rgba(255,255,255,0.3);
+  transform: scale(1.04);
+}
+
+.avatar-card.selected {
+  border-color: #ffd700;
+  background: rgba(255,215,0,0.1);
+}
+
+.avatar-card.disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.avatar-card.picked {
+  border-color: #ffd700;
+  background: rgba(255,215,0,0.1);
+  cursor: default;
+}
+
+.avatar-emoji {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.avatar-name {
+  font-weight: bold;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.avatar-skill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.skill-label {
+  font-size: 0.7rem;
+  color: #aaa;
+}
+
+.skill-bar {
+  width: 60px;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.skill-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4ade80, #ffd700, #ff6b6b);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.avatar-check {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  color: #ffd700;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.random-reveal {
+  background: rgba(0,0,0,0.4);
+  border: 2px solid #ffd700;
+  border-radius: 16px;
+  padding: 20px 30px;
+  margin-bottom: 20px;
+}
+
+.random-reveal h3 {
+  color: #ffd700;
+  font-size: 1.3rem;
+  margin-bottom: 14px;
+}
+
+.random-picks {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.random-picks .avatar-card {
+  min-width: 120px;
+}
+
+/* ─── Game ─── */
+.game {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 10px 20px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.header-top {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.header-top h1 {
+  font-size: 1.8rem;
+  color: #ffd700;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.abort-btn {
+  position: absolute;
+  right: 0;
+  background: rgba(255,80,80,0.2);
+  color: #ff8888;
+  border: 1px solid rgba(255,80,80,0.3);
+  font-size: 0.8rem;
+  padding: 5px 14px;
+}
+
+.abort-btn:hover {
+  background: rgba(255,80,80,0.4);
+  color: #fff;
+}
+
+.header h1 {
+  font-size: 1.8rem;
+  color: #ffd700;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  margin-bottom: 4px;
+}
+
+.info-bar {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.trump-indicator {
+  font-weight: bold;
+  color: #fff;
+}
+
+.trump-indicator.red {
+  color: #ff6b6b;
+}
+
+/* Message bar */
+.message-bar {
+  background: rgba(0,0,0,0.3);
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 1rem;
+  margin-bottom: 10px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Table wrapper grid: tally | west | table | east */
+.table-wrapper {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  grid-template-rows: auto 1fr auto;
+  gap: 6px;
+  margin-bottom: 10px;
+  align-items: center;
+  justify-items: center;
+}
+
+.score-tally {
+  grid-column: 1;
+  grid-row: 1 / 4;
+  align-self: start;
+}
+
+.seat-north {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.seat-west {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.seat-east {
+  grid-column: 4;
+  grid-row: 2;
+}
+
+.seat-south {
+  grid-column: 3;
+  grid-row: 3;
+}
+
+/* Score cards */
+.score-card {
+  position: relative;
+  background: rgba(0,0,0,0.35);
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 8px 18px;
+  text-align: center;
+  min-width: 130px;
+  transition: border-color 0.3s;
+}
+
+.score-card.active {
+  border-color: #ffd700;
+}
+
+.score-card.human {
+  background: rgba(0,80,0,0.5);
+}
+
+/* Poker-style dealer button — pinned to the score card corner so the
+   dealer's seat is recognizable at a glance without inline text. */
+.dealer-token {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fffbe6 0%, #f0d97a 60%, #b8902a 100%);
+  border: 2px solid #6b4d10;
+  color: #3a2700;
+  font-family: Georgia, serif;
+  font-weight: 900;
+  font-size: 0.95rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.6);
+  z-index: 2;
+  user-select: none;
+}
+
+.player-name {
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
+
+.score-total {
+  font-size: 1.3rem;
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.bid-info {
+  font-size: 0.85rem;
+  color: #bbb;
+  margin-top: 3px;
+}
+
+/* Score tally table */
+.score-tally table {
+  border-collapse: collapse;
+  background: rgba(0,0,0,0.4);
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 1.125rem;
+}
+
+.score-tally th,
+.score-tally td {
+  padding: 5px 12px;
+  text-align: center;
+  color: white;
+  min-width: 48px;
+}
+
+.score-tally thead th {
+  background: rgba(0,0,0,0.3);
+  color: #aaa;
+  font-size: 1.05rem;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+.score-tally tbody td {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.score-tally .round-num {
+  color: #888;
+  font-size: 0.975rem;
+}
+
+.score-tally .scored {
+  color: #4ade80;
+  font-weight: bold;
+}
+
+.score-tally .missed {
+  color: #888;
+}
+
+.score-tally .missed s {
+  text-decoration: line-through;
+  text-decoration-color: #ff6b6b;
+}
+
+.score-tally .current-round td {
+  color: #ccc;
+}
+
+.score-tally .total-row {
+  border-top: 2px solid rgba(255,215,0,0.4);
+}
+
+.score-tally .total-row td {
+  color: #ffd700;
+  font-weight: bold;
+  padding-top: 8px;
+}
+
+/* Table */
+.table {
+  grid-column: 3;
+  grid-row: 2;
+  width: 100%;
+  position: relative;
+  background: radial-gradient(ellipse at center, #2d5a3d 0%, #1a472a 100%);
+  border: 3px solid #8b6914;
+  border-radius: 20px;
+  height: 380px;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.3);
+}
+
+/* Opponents */
+.opponent {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.opponent.north {
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.opponent.west {
+  left: 10px;
+  top: 40%;
+  transform: translateY(-50%);
+}
+
+.opponent.east {
+  right: 10px;
+  top: 40%;
+  transform: translateY(-50%);
+}
+
+.opponent-cards {
+  display: flex;
+  gap: -8px;
+}
+
+.opponent-cards.vertical {
+  flex-direction: column;
+}
+
+.card-back {
+  width: 36px;
+  height: 50px;
+  background: linear-gradient(135deg, #1a3a8a 0%, #0d2366 100%);
+  border: 2px solid #4a6abf;
+  border-radius: 4px;
+  margin: 0 -10px;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
+
+.card-back::after {
+  content: '';
+  display: block;
+  margin: 4px;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 2px;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    rgba(255,255,255,0.05) 3px,
+    rgba(255,255,255,0.05) 6px
+  );
+}
+
+.card-back.small {
+  width: 30px;
+  height: 42px;
+  margin: -6px 0;
+}
+
+/* Large trump indicator centered on table */
+.table-trump {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22rem;
+  opacity: 0.56;
+  pointer-events: none;
+  z-index: 0;
+  line-height: 1;
+}
+
+.table-trump.red {
+  color: #cc0000;
+}
+
+.table-trump.black {
+  color: #ffffff;
+}
+
+/* Trick area */
+.trick-area {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 240px;
+  height: 200px;
+  z-index: 1;
+}
+
+.played-card {
+  position: absolute;
+  width: 56px;
+  height: 78px;
+}
+
+.played-card .card-face {
+  width: 100%;
+  height: 100%;
+  font-size: 0.9rem;
+}
+
+/* Per-position base transform is exposed as a CSS variable so the collect
+   keyframe can reuse it; otherwise we'd need 4 separate keyframes. */
+.pos-you {
+  bottom: 5px;
+  left: 50%;
+  --base-transform: translateX(-50%);
+  transform: var(--base-transform);
+}
+
+.pos-north {
+  top: 5px;
+  left: 50%;
+  --base-transform: translateX(-50%);
+  transform: var(--base-transform);
+}
+
+.pos-west {
+  left: 15px;
+  top: 50%;
+  --base-transform: translateY(-50%);
+  transform: var(--base-transform);
+}
+
+.pos-east {
+  right: 15px;
+  top: 50%;
+  --base-transform: translateY(-50%);
+  transform: var(--base-transform);
+}
+
+/* CSS-animation-based trick collection — fires on mount or class addition
+   regardless of React's render scheduling, so the 4th card always paints at
+   its played position before sweeping toward the winner's seat. The 0%/47%
+   hold gives ~500ms of "completed trick visible" before the move. */
+.collect-to-you  { --collect-dx: 0px;    --collect-dy: 220px;  }
+.collect-to-north { --collect-dx: 0px;   --collect-dy: -220px; }
+.collect-to-west { --collect-dx: -300px; --collect-dy: 0px;    }
+.collect-to-east { --collect-dx: 300px;  --collect-dy: 0px;    }
+
+.played-card.collect-to-you,
+.played-card.collect-to-north,
+.played-card.collect-to-west,
+.played-card.collect-to-east {
+  animation: collect-trick 1.05s ease-out forwards;
+}
+
+@keyframes collect-trick {
+  0%, 47% {
+    transform: var(--base-transform) translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: var(--base-transform) translate(var(--collect-dx), var(--collect-dy)) scale(0.35);
+    opacity: 0;
+  }
+}
+
+/* Card face */
+.card-face {
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+}
+
+.card-face.red {
+  color: #cc0000;
+}
+
+.card-face.black {
+  color: #1a1a1a;
+}
+
+.card-rank {
+  font-size: 1.1em;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.card-suit {
+  font-size: 1.3em;
+  line-height: 1;
+}
+
+/* Player hand */
+.player-hand {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  padding: 5px 0;
+  min-height: 100px;
+  flex-wrap: wrap;
+}
+
+.hand-card {
+  width: 64px;
+  height: 90px;
+  margin: 0 -4px;
+  cursor: default;
+  transition: transform 0.2s, margin-top 0.2s;
+  position: relative;
+}
+
+.hand-card .card-face {
+  width: 100%;
+  height: 100%;
+  font-size: 1rem;
+}
+
+.hand-card.playable {
+  cursor: pointer;
+}
+
+.hand-card.playable:hover {
+  transform: translateY(-12px);
+  z-index: 10;
+}
+
+.hand-card.dimmed {
+  opacity: 0.4;
+}
+
+/* Actions */
+.actions {
+  text-align: center;
+  padding: 10px 0;
+}
+
+.action-label {
+  font-size: 1rem;
+  margin-bottom: 8px;
+  color: #ccc;
+}
+
+.btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn:hover {
+  transform: scale(1.05);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn.primary {
+  background: #ffd700;
+  color: #1a1a1a;
+  font-weight: bold;
+  font-size: 1.1rem;
+  padding: 12px 32px;
+}
+
+.btn.primary:hover {
+  background: #ffed4a;
+}
+
+.trump-choices {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn.trump-btn {
+  padding: 10px 20px;
+  font-size: 1.1rem;
+  background: white;
+  font-weight: bold;
+}
+
+.btn.trump-btn.red {
+  color: #cc0000;
+}
+
+.btn.trump-btn.black {
+  color: #1a1a1a;
+}
+
+.btn.trump-btn.nt {
+  color: #1a472a;
+  letter-spacing: 0.5px;
+}
+
+.btn.trump-btn:hover {
+  background: #f0f0f0;
+}
+
+.table-trump.nt {
+  font-size: 13rem;
+  font-weight: bold;
+  letter-spacing: 12px;
+}
+
+.bid-choices {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.btn.bid-btn {
+  width: 42px;
+  height: 42px;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  font-weight: bold;
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.btn.bid-btn:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+/* Round results overlay (centered on table) */
+.table-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.round-results {
+  background: rgba(0,0,0,0.85);
+  border-radius: 12px;
+  padding: 16px 24px;
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 30px rgba(0,0,0,0.6);
+}
+
+.round-results h3 {
+  color: #ffd700;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.round-results table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.round-results th,
+.round-results td {
+  padding: 4px 16px;
+  text-align: center;
+}
+
+.round-results th {
+  color: #aaa;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  font-size: 0.85rem;
+}
+
+.hit-bid td {
+  color: #4ade80;
+  font-weight: bold;
+}
+
+.missed-bid td {
+  color: #888;
+}
+
+.table-overlay .btn.primary {
+  margin-top: 12px;
+}
+
+/* Game over panel */
+.game-over-panel {
+  background: rgba(0,0,0,0.9);
+  border-radius: 16px;
+  padding: 24px 36px;
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 40px rgba(255,215,0,0.3);
+  text-align: center;
+}
+
+.game-over-panel h2 {
+  color: #ffd700;
+  font-size: 2rem;
+  margin-bottom: 16px;
+  text-shadow: 0 0 10px rgba(255,215,0,0.4);
+}
+
+.final-standings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.standing {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  color: #ccc;
+}
+
+.standing.first {
+  background: rgba(255,215,0,0.15);
+  color: #ffd700;
+  font-weight: bold;
+  font-size: 1.3rem;
+}
+
+.standing-rank {
+  width: 24px;
+  text-align: right;
+}
+
+.standing-name {
+  width: 80px;
+  text-align: left;
+}
+
+.standing-score {
+  width: 70px;
+  text-align: right;
+}
