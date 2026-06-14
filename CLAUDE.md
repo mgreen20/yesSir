@@ -14,7 +14,17 @@ No test framework is configured; `simulate.js` is the primary tool for validatin
 
 ## What this project is
 
-A single-page React (v19) + Vite app implementing **"Yes Sir!"**, a trick-taking card game in the Oh Hell family. One human plays against three AI opponents over 8 rounds of 13 tricks. There is no backend, no routing, no persistence — the entire app is client-side and resets on reload.
+A React (v19) + Vite app implementing **"Yes Sir!"**, a trick-taking card game in the Oh Hell family. Supports both solo play (one human vs three AI opponents) and multiplayer (real-time via WebSocket). Auth and user profiles are backed by AWS Cognito + API Gateway + Lambda. The frontend is hosted on S3 + CloudFront.
+
+## Deployment
+
+```
+npm run build
+aws s3 sync dist/ s3://yessirstack-sitebucket397a1860-1ulrwxvcmuzy/ --delete
+aws cloudfront create-invalidation --distribution-id E6Z2ABRS9N4DV --paths "/*"
+```
+
+CDK infrastructure lives in `infrastructure/`. The Lambda functions are in `infrastructure/lambda/`.
 
 ## Architecture
 
@@ -28,9 +38,17 @@ Also exposes the **tunable weights API**: `DEFAULT_WEIGHTS` (the hand-tuned numb
 
 **`train.js`** (repo root) — evolutionary trainer for the heuristic weights. Two modes: default **cross-tier** (`node train.js --minutes 5`) where all 5 tier populations play mixed-tier games each generation with within-tier selection, and **within-tier** (`node train.js --within`) where each tier evolves in isolation. Seeds from `src/trainedWeights.json` if present, otherwise random. Writes the per-tier champions back to `src/trainedWeights.json` on completion. The "genome" is the 14 numeric weights in `DEFAULT_WEIGHTS`; `aiChooseCard`'s structural gates are *not* evolved.
 
-**`src/App.jsx`** — the router shell. Sets up `BrowserRouter` with two routes: `/` → `Lobby`, `/game` → `Game`.
+**`src/App.jsx`** — the router shell. Routes: `/` → `Lobby` (multiplayer), `/solo` → `SoloLobby`, `/game` → `Game` (solo), `/multiplayer-game` → `MultiplayerGame`, `/settings` → `AccountSettings`, `/stats` → `PlayerStats`, `/login`, `/signup`, `/confirm`. All routes except auth pages are wrapped in `RequireAuth`.
 
-**`src/pages/Lobby.jsx`** — opponent selection. On start, calls `navigate("/game", { state: { opponents } })` to hand off to the game page via router state.
+**`src/pages/Lobby.jsx`** — multiplayer lobby. Fetches user profile (`/profile` API) on mount to display the avatar + screen name dropdown in the header (Settings / Log out). Polls `/lobbies`, handles create/join/leave, and navigates to `/multiplayer-game` with game state.
+
+**`src/pages/SoloLobby.jsx`** — solo opponent selection. Same avatar/name dropdown as `Lobby.jsx`. Navigates to `/game` with selected opponents in router state.
+
+**`src/pages/AccountSettings.jsx`** — profile management: screen name, avatar photo upload (S3 presigned URL via `/profile/avatar-upload-url`), email change (Cognito), password change. New users are redirected here automatically after email verification.
+
+**`src/pages/ConfirmEmail.jsx`** — email verification after sign-up. Receives `email` and `password` via router state from `SignUp`; after successful confirmation auto-signs the user in and redirects to `/settings` so they can set up their profile immediately.
+
+**`src/auth.js`** — thin wrappers around AWS Cognito User Pool SDK: `signUp`, `confirmSignUp`, `signIn`, `signOut`, `getCurrentUser`, `getIdToken`, `updateEmail`, `verifyEmailCode`, `changePassword`.
 
 **`src/gameReducer.js`** — pure reducer + action handlers for the game state. Exports `PHASES`, `initialGameState()`, `gameReducer(state, action)`, and the small helpers `leftOfDealer` / `getNextPlayer`. Five action types: `DEAL`, `CHOOSE_TRUMP`, `BID`, `PLAY_CARD`, `ADVANCE_TRICK`. Every state transition lives here; side effects (deck shuffling, AI function calls, win sound) stay in the caller, and the action payload carries whatever the reducer needs (`hands`, the AI's chosen card, `playerNames` for messages). Reducer is pure — safe to call from anywhere, easy to unit-test.
 
@@ -49,6 +67,8 @@ AI turns are driven by a `useEffect` that watches `phase`/`currentBidder`/`curre
 **`src/avatars.js`** — the 20 selectable opponents, each with a `skill` value 1–10. Skill is the AI's only difficulty knob and is threaded into every `ai*` function in `gameLogic.js`; higher skill = less random noise in trump/bid evaluation and a lower blunder rate during play.
 
 **`src/sounds.js`** — Web Audio API synthesis (no audio files). `playDealSound` (filtered noise burst) and `playWinSound` (ascending arpeggio).
+
+**`src/App.css`** — global styles. Responsive breakpoints at `max-width: 900px` (tablet) and `max-width: 600px` (mobile). On mobile, the table grid reflows to a 3-column layout (west | table | east), score tally is hidden, and opponent card stacks (`.opponent-cards`) are hidden to reduce clutter.
 
 ## Conventions worth preserving
 
