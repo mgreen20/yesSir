@@ -1,5 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Component } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
+
+class GameErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="game" style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100vh" }}>
+          <div style={{ textAlign:"center", color:"#e8d5b0", maxWidth:480, padding:"2rem" }}>
+            <p style={{ color:"#e94560", marginBottom:"1rem" }}>Game render error:</p>
+            <pre style={{ color:"#ffd700", fontSize:"0.75rem", textAlign:"left", background:"rgba(0,0,0,0.4)", padding:"1rem", borderRadius:8, overflowX:"auto", marginBottom:"1.5rem" }}>
+              {this.state.error.toString()}
+            </pre>
+            <button className="btn primary" onClick={() => window.location.href = "/"}>Back to Lobby</button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import { getCurrentUser } from "../auth";
 import { useGameSocket } from "../hooks/useGameSocket";
 import GameHeader from "../components/GameHeader";
@@ -24,7 +45,11 @@ export default function MultiplayerGame() {
     return <Navigate to="/" replace />;
   }
 
-  return <MultiplayerGameView gameId={gameId} players={players} />;
+  return (
+    <GameErrorBoundary>
+      <MultiplayerGameView gameId={gameId} players={players} />
+    </GameErrorBoundary>
+  );
 }
 
 function MultiplayerGameView({ gameId, players }) {
@@ -48,8 +73,15 @@ function MultiplayerGameView({ gameId, players }) {
     navigate("/");
   }
 
+  // Auto-advance trick after 2 s — must be before any early return (Rules of Hooks)
+  useEffect(() => {
+    if (gameState?.phase !== "TRICK_RESULT") return;
+    const timer = setTimeout(() => sendAction("ADVANCE_TRICK", {}), 2000);
+    return () => clearTimeout(timer);
+  }, [gameState?.phase, gameState?.trickNumber, sendAction]);
+
   // Loading / connecting state
-  if (!gameState) {
+  if (!gameState || yourSeat === null) {
     return (
       <div
         className="game"
@@ -158,16 +190,7 @@ function MultiplayerGameView({ gameId, players }) {
     sendAction("PLAY_CARD", { player: yourSeat, card });
   }
 
-  function handleAdvanceTrick() {
-    sendAction("ADVANCE_TRICK", {});
-  }
 
-  // Auto-advance trick after 2 s so all players see all 4 cards before clearing
-  useEffect(() => {
-    if (phase !== "TRICK_RESULT") return;
-    const timer = setTimeout(() => sendAction("ADVANCE_TRICK", {}), 2000);
-    return () => clearTimeout(timer);
-  }, [phase, trickNumber, sendAction]);
 
   // Tally headers (3-char abbreviations for opponents, "You" for human seat)
   const tallyHeaders = playerNames.map((n) => (n === "You" ? "You" : n.slice(0, 3)));
@@ -245,18 +268,6 @@ function MultiplayerGameView({ gameId, players }) {
           {showTableTrump && <TableTrump trumpSuit={trumpSuit} />}
 
           <TrickArea currentTrick={remappedTrick} winnerPosition={winnerPosition} />
-
-          {phase === "TRICK_RESULT" && (
-            <div className="table-overlay" style={{ pointerEvents: "none" }}>
-              <button
-                className="btn primary"
-                style={{ pointerEvents: "auto" }}
-                onClick={handleAdvanceTrick}
-              >
-                Next Trick
-              </button>
-            </div>
-          )}
 
           {phase === "ROUND_RESULT" && (
             <RoundResultModal

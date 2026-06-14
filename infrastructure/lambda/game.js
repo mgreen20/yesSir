@@ -243,8 +243,8 @@ export async function handleGameAction(connectionId, payload, ddb, wsClient, env
   // ── Validate the action ───────────────────────────────────────────────────
 
   if (actionType === 'DEAL') {
-    if (state.phase !== PHASES.PRE_DEAL) return;
-    // Anyone can trigger a deal (e.g. a "Deal" button), no per-seat validation.
+    if (state.phase !== PHASES.PRE_DEAL && state.phase !== PHASES.ROUND_RESULT) return;
+    // Anyone can trigger a deal (e.g. "Deal" or "Next Round" button), no per-seat validation.
   } else if (actionType === 'CHOOSE_TRUMP') {
     if (state.phase !== PHASES.CHOOSE_TRUMP) return;
     if (state.currentBidder !== seat) return;
