@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getIdToken, getCurrentUser, signOut } from "../auth";
 import AVATARS from "../avatars";
@@ -47,10 +47,34 @@ export default function Lobby() {
   const intervalRef = useRef(null);
   const suppressRejoinRef = useRef(false);
   const [userEmail, setUserEmail] = useState("");
+  const [screenname, setScreenname] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   useEffect(() => {
-    getCurrentUser().then(u => { if (u) setUserEmail(u.email); });
+    async function loadUser() {
+      const u = await getCurrentUser();
+      if (!u) return;
+      setUserEmail(u.email);
+      try {
+        const profile = await apiFetch("/profile");
+        setScreenname(profile.screenname || "");
+        setAvatarUrl(profile.avatarUrl || "");
+      } catch { /* non-fatal */ }
+    }
+    loadUser();
   }, []);
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClick(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [menuOpen]);
 
   // List view polling — also auto-rejoins if the user is already in an open lobby
   useEffect(() => {
@@ -226,7 +250,7 @@ export default function Lobby() {
             background: "rgba(0,0,0,0.35)",
             border: "1px solid rgba(255,255,255,0.15)",
             borderRadius: "12px",
-            padding: "2rem",
+            padding: "1.25rem",
             width: "100%",
             maxWidth: "420px",
           }}
@@ -393,26 +417,66 @@ export default function Lobby() {
         <h1 style={{ color: "#ffd700", fontSize: "2.5rem", margin: 0 }}>
           Yes Sir!
         </h1>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          {userEmail && (
+        <div ref={menuRef} style={{ display: "flex", alignItems: "center", gap: "0.5rem", position: "relative" }}>
+          {(screenname || userEmail) && (
             <span style={{ color: "#ccc", fontSize: "0.85rem" }}>
-              {trimEmail(userEmail)}
+              {screenname || trimEmail(userEmail)}
             </span>
           )}
           <button
-            onClick={handleSignOut}
+            onClick={() => setMenuOpen(o => !o)}
             style={{
-              background: "transparent",
-              border: "1px solid rgba(255,255,255,0.3)",
-              color: "#ccc",
-              padding: "0.35rem 0.75rem",
-              borderRadius: "6px",
-              fontSize: "0.85rem",
+              background: "none",
+              border: "none",
+              padding: 0,
               cursor: "pointer",
+              borderRadius: "50%",
+              width: 36,
+              height: 36,
+              overflow: "hidden",
+              flexShrink: 0,
             }}
           >
-            Sign out
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="avatar" style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", display: "block" }} />
+            ) : (
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#0f3460", border: "2px solid rgba(255,255,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "1rem", fontWeight: 700 }}>
+                {(screenname || trimEmail(userEmail) || "?")[0].toUpperCase()}
+              </div>
+            )}
           </button>
+          {menuOpen && (
+            <div style={{
+              position: "absolute",
+              top: "calc(100% + 8px)",
+              right: 0,
+              background: "#1a1a2e",
+              border: "1px solid rgba(255,255,255,0.15)",
+              borderRadius: "8px",
+              minWidth: 150,
+              boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+              zIndex: 100,
+              overflow: "hidden",
+            }}>
+              <button
+                onClick={() => { setMenuOpen(false); navigate("/settings"); }}
+                style={{ display: "block", width: "100%", padding: "0.65rem 1rem", background: "none", border: "none", color: "#e8d5b0", fontSize: "0.9rem", textAlign: "left", cursor: "pointer" }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.08)"}
+                onMouseLeave={e => e.currentTarget.style.background = "none"}
+              >
+                Settings
+              </button>
+              <div style={{ height: 1, background: "rgba(255,255,255,0.08)" }} />
+              <button
+                onClick={() => { setMenuOpen(false); handleSignOut(); }}
+                style={{ display: "block", width: "100%", padding: "0.65rem 1rem", background: "none", border: "none", color: "#e94560", fontSize: "0.9rem", textAlign: "left", cursor: "pointer" }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.08)"}
+                onMouseLeave={e => e.currentTarget.style.background = "none"}
+              >
+                Log out
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -456,6 +520,7 @@ export default function Lobby() {
             borderRadius: "12px",
             padding: "1.5rem",
             marginBottom: "1.5rem",
+            overflowX: "auto",
           }}
         >
           <h2

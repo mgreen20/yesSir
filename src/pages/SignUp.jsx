@@ -22,7 +22,7 @@ export default function SignUp() {
     setLoading(true);
     try {
       await signUp(email, password);
-      navigate('/confirm', { state: { email } });
+      navigate('/confirm', { state: { email, password } });
     } catch (err) {
       setError(err.message || 'Sign up failed. Please try again.');
     } finally {

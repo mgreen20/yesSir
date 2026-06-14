@@ -8,9 +8,9 @@ class GameErrorBoundary extends Component {
     if (this.state.error) {
       return (
         <div className="game" style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100vh" }}>
-          <div style={{ textAlign:"center", color:"#e8d5b0", maxWidth:480, padding:"2rem" }}>
+          <div style={{ textAlign:"center", color:"#e8d5b0", maxWidth:"min(480px, 90vw)", padding:"2rem" }}>
             <p style={{ color:"#e94560", marginBottom:"1rem" }}>Game render error:</p>
-            <pre style={{ color:"#ffd700", fontSize:"0.75rem", textAlign:"left", background:"rgba(0,0,0,0.4)", padding:"1rem", borderRadius:8, overflowX:"auto", marginBottom:"1.5rem" }}>
+            <pre style={{ color:"#ffd700", fontSize:"0.75rem", textAlign:"left", background:"rgba(0,0,0,0.4)", padding:"1rem", borderRadius:8, overflowX:"auto", marginBottom:"1.5rem", whiteSpace:"pre-wrap", wordBreak:"break-all" }}>
               {this.state.error.toString()}
             </pre>
             <button className="btn primary" onClick={() => window.location.href = "/"}>Back to Lobby</button>

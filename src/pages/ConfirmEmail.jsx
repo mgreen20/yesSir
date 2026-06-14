@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { confirmSignUp } from '../auth.js';
+import { confirmSignUp, signIn } from '../auth.js';
 
 export default function ConfirmEmail() {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email;
+  const password = location.state?.password;
 
   if (!email) {
     navigate('/signup');
@@ -22,7 +23,12 @@ export default function ConfirmEmail() {
     setLoading(true);
     try {
       await confirmSignUp(email, code);
-      navigate('/login', { state: { confirmed: true } });
+      if (password) {
+        await signIn(email, password);
+        navigate('/settings');
+      } else {
+        navigate('/login', { state: { confirmed: true } });
+      }
     } catch (err) {
       setError(err.message || 'Confirmation failed. Please try again.');
     } finally {
