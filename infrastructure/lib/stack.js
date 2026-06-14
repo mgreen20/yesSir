@@ -60,11 +60,40 @@ class YesSirStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    const usersTable = new dynamodb.Table(this, 'UsersTable', {
+      tableName: 'yes-sir-users',
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // ── Avatars S3 bucket ─────────────────────────────────────────────────
+    const avatarsBucket = new s3.Bucket(this, 'AvatarsBucket', {
+      bucketName: `yes-sir-avatars-${this.account}`,
+      publicReadAccess: true,
+      blockPublicAccess: new s3.BlockPublicAccess({
+        blockPublicAcls: false,
+        blockPublicPolicy: false,
+        ignorePublicAcls: false,
+        restrictPublicBuckets: false,
+      }),
+      cors: [{
+        allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.GET],
+        allowedOrigins: ['*'],
+        allowedHeaders: ['*'],
+        maxAge: 3000,
+      }],
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
     // ── Lambda environment shared across all handlers ─────────────────────
     const lambdaEnv = {
       CONNECTIONS_TABLE: connectionsTable.tableName,
       LOBBIES_TABLE: lobbiesTable.tableName,
       GAMES_TABLE: gamesTable.tableName,
+      USERS_TABLE: usersTable.tableName,
+      AVATARS_BUCKET: avatarsBucket.bucketName,
       USER_POOL_ID: userPool.userPoolId,
       USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
     };
@@ -84,12 +113,16 @@ class YesSirStack extends cdk.Stack {
     const disconnectFn = mkFn('DisconnectFn', 'websocket.disconnect');
     const messageFn    = mkFn('MessageFn',    'websocket.message');
     const lobbyFn      = mkFn('LobbyFn',      'lobby.handler');
+    const profileFn    = mkFn('ProfileFn',    'profile.handler');
 
     [connectFn, disconnectFn, messageFn, lobbyFn].forEach(fn => {
       connectionsTable.grantReadWriteData(fn);
       lobbiesTable.grantReadWriteData(fn);
       gamesTable.grantReadWriteData(fn);
     });
+
+    usersTable.grantReadWriteData(profileFn);
+    avatarsBucket.grantPut(profileFn);
 
     // ── WebSocket API ─────────────────────────────────────────────────────
     const wsApi = new apigateway.WebSocketApi(this, 'WsApi', {
@@ -171,6 +204,20 @@ class YesSirStack extends cdk.Stack {
       path: '/lobbies/{lobbyId}/join',
       methods: [apigateway.HttpMethod.POST],
       integration: new integrations.HttpLambdaIntegration('JoinInt', lobbyFn),
+      authorizer: cognitoAuthorizer,
+    });
+
+    httpApi.addRoutes({
+      path: '/profile',
+      methods: [apigateway.HttpMethod.GET, apigateway.HttpMethod.PUT],
+      integration: new integrations.HttpLambdaIntegration('ProfileInt', profileFn),
+      authorizer: cognitoAuthorizer,
+    });
+
+    httpApi.addRoutes({
+      path: '/profile/avatar-upload-url',
+      methods: [apigateway.HttpMethod.POST],
+      integration: new integrations.HttpLambdaIntegration('AvatarUploadInt', profileFn),
       authorizer: cognitoAuthorizer,
     });
 

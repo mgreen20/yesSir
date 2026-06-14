@@ -58,6 +58,35 @@ export function getCurrentUser() {
   });
 }
 
+export function updateEmail(newEmail) {
+  return new Promise((resolve, reject) => {
+    const user = pool.getCurrentUser();
+    if (!user) return reject(new Error('Not signed in'));
+    user.getSession((err, session) => {
+      if (err || !session.isValid()) return reject(new Error('Session expired'));
+      const attrs = [new CognitoUserAttribute({ Name: 'email', Value: newEmail })];
+      user.updateAttributes(attrs, (err2, result) => {
+        if (err2) reject(err2);
+        else resolve(result);
+      });
+    });
+  });
+}
+
+export function verifyEmailCode(code) {
+  return new Promise((resolve, reject) => {
+    const user = pool.getCurrentUser();
+    if (!user) return reject(new Error('Not signed in'));
+    user.getSession((err) => {
+      if (err) return reject(new Error('Session expired'));
+      user.verifyAttribute('email', code, {
+        onSuccess: resolve,
+        onFailure: reject,
+      });
+    });
+  });
+}
+
 export function changePassword(oldPassword, newPassword) {
   return new Promise((resolve, reject) => {
     const user = pool.getCurrentUser();
