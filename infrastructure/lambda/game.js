@@ -24,6 +24,7 @@ function personalizeState(gameState, seat, players) {
       : [],
     playerNames: players.map(p => p.name),
     playerEmojis: players.map(p => p.emoji || ''),
+    playerAvatarUrls: players.map(p => p.avatarUrl || ''),
     playerSkills: players.map(p => p.skill || 0),
     isAI: players.map(p => p.isAI),
     yourSeat: seat,

@@ -179,15 +179,19 @@ export default function Lobby() {
   }
 
   async function handleStartWithAI() {
-    const humanPlayers = (currentLobby.players || []).map((p, i) => ({
-      seat: i,
-      userId: p.userId,
-      username: p.username,
-      name: trimEmail(p.username),
-      isAI: false,
-      emoji: "",
-      skill: 0,
-    }));
+    const humanPlayers = (currentLobby.players || []).map((p, i) => {
+      const isMe = p.username === userEmail;
+      return {
+        seat: i,
+        userId: p.userId,
+        username: p.username,
+        name: isMe ? (screenname || trimEmail(p.username)) : trimEmail(p.username),
+        avatarUrl: isMe ? avatarUrl : "",
+        isAI: false,
+        emoji: "",
+        skill: 0,
+      };
+    });
 
     const shuffled = [...AVATARS].sort(() => Math.random() - 0.5);
     const aiPlayers = shuffled.slice(0, 4 - humanPlayers.length).map((avatar, i) => ({
@@ -271,47 +275,26 @@ export default function Lobby() {
                       i < 3 ? "1px solid rgba(255,255,255,0.08)" : "none",
                   }}
                 >
-                  {player ? (
-                    <div
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "50%",
-                        background: "#ffd700",
-                        color: "#1a472a",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: "bold",
-                        fontSize: "1.1rem",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {player.username ? player.username[0].toUpperCase() : "?"}
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "50%",
-                        background: "rgba(255,255,255,0.1)",
-                        color: "#888",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: "bold",
-                        fontSize: "0.9rem",
-                        flexShrink: 0,
-                      }}
-                    >
+                  {player ? (() => {
+                    const isMe = player.username === userEmail;
+                    const displayName = isMe ? (screenname || trimEmail(player.username)) : trimEmail(player.username);
+                    const photo = isMe ? avatarUrl : null;
+                    return photo ? (
+                      <img src={photo} alt="" style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#ffd700", color: "#1a472a", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "1.1rem", flexShrink: 0 }}>
+                        {displayName[0]?.toUpperCase() ?? "?"}
+                      </div>
+                    );
+                  })() : (
+                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.1)", color: "#888", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.9rem", flexShrink: 0 }}>
                       {i + 1}
                     </div>
                   )}
                   <div style={{ flex: 1 }}>
                     {player ? (
                       <span style={{ color: "#fff" }}>
-                        {trimEmail(player.username)}
+                        {player.username === userEmail ? (screenname || trimEmail(player.username)) : trimEmail(player.username)}
                       </span>
                     ) : (
                       <span style={{ color: "#888", fontStyle: "italic" }}>

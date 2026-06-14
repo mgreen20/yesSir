@@ -130,6 +130,7 @@ function MultiplayerGameView({ gameId, players }) {
     playableCards,
     playerNames: rawPlayerNames,
     playerEmojis,
+    playerAvatarUrls,
     isAI,
   } = gameState;
 
@@ -240,6 +241,7 @@ function MultiplayerGameView({ gameId, players }) {
           <ScoreCard
             name={playerNames[seatNorth]}
             emoji={playerEmojis?.[seatNorth] ?? ""}
+            avatarUrl={playerAvatarUrls?.[seatNorth] ?? ""}
             isDealer={dealer === seatNorth}
             isActive={currentPlayer === seatNorth}
             score={scores[seatNorth]}
@@ -252,6 +254,7 @@ function MultiplayerGameView({ gameId, players }) {
           <ScoreCard
             name={playerNames[seatWest]}
             emoji={playerEmojis?.[seatWest] ?? ""}
+            avatarUrl={playerAvatarUrls?.[seatWest] ?? ""}
             isDealer={dealer === seatWest}
             isActive={currentPlayer === seatWest}
             score={scores[seatWest]}
@@ -293,6 +296,7 @@ function MultiplayerGameView({ gameId, players }) {
           <ScoreCard
             name={playerNames[seatEast]}
             emoji={playerEmojis?.[seatEast] ?? ""}
+            avatarUrl={playerAvatarUrls?.[seatEast] ?? ""}
             isDealer={dealer === seatEast}
             isActive={currentPlayer === seatEast}
             score={scores[seatEast]}
@@ -305,6 +309,7 @@ function MultiplayerGameView({ gameId, players }) {
           <ScoreCard
             name="You"
             emoji=""
+            avatarUrl={playerAvatarUrls?.[yourSeat] ?? ""}
             isDealer={dealer === yourSeat}
             isHuman
             isActive={currentPlayer === yourSeat}

@@ -72,7 +72,6 @@ export async function handler(event) {
         Bucket: AVATARS_BUCKET,
         Key: key,
         ContentType: contentType,
-        ACL: 'public-read',
       }),
       { expiresIn: 300 },
     );
