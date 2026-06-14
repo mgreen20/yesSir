@@ -1,0 +1,16 @@
+{
+  "appId": "com.yesSir.app",
+  "appName": "Yes Sir!",
+  "webDir": "dist",
+  "server": {
+    "allowNavigation": [
+      "*.execute-api.us-east-1.amazonaws.com",
+      "*.cloudfront.net"
+    ]
+  },
+  "ios": {
+    "backgroundColor": "#1a472a",
+    "contentInset": "always",
+    "scrollEnabled": false
+  }
+}

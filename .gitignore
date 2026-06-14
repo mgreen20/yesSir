@@ -29,5 +29,11 @@ dist-ssr
 # CDK build output
 infrastructure/cdk.out/
 
+# Capacitor iOS build artifacts
+ios/App/Pods/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/build/
+ios/.DS_Store
+
 # Env files with secrets
 .env.production
