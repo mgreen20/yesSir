@@ -25,3 +25,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# CDK build output
+infrastructure/cdk.out/
+
+# Env files with secrets
+.env.production
