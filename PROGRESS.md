@@ -58,22 +58,36 @@
 - `useGameSocket` waits for `userId` before opening WebSocket
 - Lambda player normalization: lobby stores full `{ seat, userId, username, name, isAI, emoji, skill }` shape
 - `gameState` defaulted to `initialGameState()` in Lambda to handle freshly-created games
+- Initial state saved to DynamoDB on first JOIN_GAME so second player sees consistent state
 - CloudFront cache: `index.html` served with `no-cache` to prevent stale JS on deploy
 - Leave button calls `POST /lobbies/{id}/leave` in DynamoDB before clearing local state (suppresses auto-rejoin loop)
+- React error #310: moved auto-advance `useEffect` before early return guard (Rules of Hooks)
+- Loading guard extended to `!gameState || yourSeat === null` to prevent render with null seat
+- `GameErrorBoundary` added to `MultiplayerGame` — shows error text instead of blank green screen
+- DEAL action now accepted from `ROUND_RESULT` phase (was PRE_DEAL only) — fixes Next Round button
+- `runAiTurns` stops at `TRICK_RESULT` — server broadcasts all 4 cards, client auto-advances after 2 s
+- Removed "Next Trick" button overlay — cards sweep to winner via CSS animation automatically
+
+### Verified working (tested with 2 humans + 2 AI)
+- Both players navigate to the same multiplayer game
+- Cards dealt, AI plays automatically, humans see personalized hands
+- Tricks complete, cards animate to winner after 2 seconds
+- Round result modal shows after 13 tricks; Next Round advances correctly
+- Full 8-round game playable end-to-end
 
 ---
 
 ## In Progress / Known Issues
 
-1. **Multiplayer game untested end-to-end** — architecture is complete but both players were still connecting when last tested. Latest fix (gameState null crash) is deployed; needs a fresh test session.
+1. **Player stats backend** — `GET /stats` endpoint not built; stats page shows placeholder values.
 
-2. **Player stats backend** — `GET /stats` endpoint not built; stats page shows placeholder values.
+2. **Game disconnection handling** — if a player disconnects mid-game, no reconnection recovery or AI takeover yet.
 
-3. **Game disconnection handling** — if a player disconnects mid-game, no reconnection recovery or AI takeover yet.
+3. **ADVANCE_TRICK race condition** — all clients send ADVANCE_TRICK after 2 s; the server guard (`phase !== TRICK_RESULT → return`) makes it idempotent but only the first sender triggers the broadcast. Low risk in practice.
 
-4. **ADVANCE_TRICK race condition** — any player can send ADVANCE_TRICK; concurrent sends from multiple clients are not yet idempotent (could apply twice).
+4. **Game cleanup** — completed games stay in DynamoDB indefinitely; no TTL or cleanup on game-over.
 
-5. **Game cleanup** — completed games stay in DynamoDB indefinitely; no TTL or cleanup on game-over.
+5. **GameOverModal "You" seat assumption** — modal checks `winnerIdx === 0` for "You Won" but in multiplayer the human may not be seat 0. Cosmetic only; scores are correct.
 
 ---
 
